@@ -20,30 +20,7 @@ def elu_prime(x):
     d_elu[smaller_zero_inds] = np.exp(x)[smaller_zero_inds]
     return d_elu
 
-def softmax(x):
-    tmp = np.exp(x)
-    return (tmp.T/np.sum(tmp, axis=1)).T
 
-def softmax_prime(x):
-    out = np.zeros_like(x, dtype = float)
-    denom = np.sum(np.exp(x), axis=1)**2
-    saved_mask = np.ones_like(x, dtype = float)
-
-    # Have to calculate explicitly for each neuron because the result is dependent on 
-    # not only the neuron being derivated but also the neuron's (in the layer) that are 
-    # being regarded as a constant, resulting in the formula changing for each one.
-    # Transpose to change shape (sample,neuron) -> (neuron,sample) and allow easy enumeration.
-    for i, arr in enumerate(x.T):
-        mask = np.copy(saved_mask)
-        mask[:,i] = 0
-
-        num = np.exp(arr)*np.sum(np.multiply(np.exp(x), mask), axis=1)
-        
-        if np.invert(np.isfinite(num)).any() or np.invert(np.isfinite(denom)).any():
-            print("asd")
-        out[:,i] = num/denom 
-         
-    return out
 
 
 class Network:
@@ -80,7 +57,6 @@ class Network:
                 batch_f, batch_t = feats[start:end], targs[start:end]
                 self.update_batch(batch_f, batch_t, eta, ct)
 
-
             if val_data:
                 print("Epoch {0}:{1}".format(
                     i,self.evaluate(f_test, t_test)))
@@ -98,9 +74,6 @@ class Network:
         del_w,del_b=self.backprop_algo(batch_f, batch_t, len_batch, ct)
 
         self.weights=[w-(eta/len_batch) * dw for w,dw in zip(self.weights,del_w)]      
-        if np.invert(np.isfinite(self.weights[0])).any():
-            print("asd")
-
         self.biases=[b-(eta/len_batch) * db for b,db in zip(self.biases,del_b)]
             
     def backprop_algo(self, batch_f, batch_t, len_batch, ct):
@@ -114,8 +87,6 @@ class Network:
         # Forward.
         for i in range(self.num_layers-2):
             z[i] = act[i].dot(self.weights[i]) + self.biases[i]
-            if np.invert(np.isfinite(z[i])).any():
-                print("asd")
             act[i+1] = self.act_fct(z[i])
         z[-1] = act[-2].dot(self.weights[-1]) +self.biases[-1]
         act[-1] = self.act_fct(z[-1])
@@ -132,9 +103,6 @@ class Network:
         # add the contributions up. Repeat for the deltas and activations of other neurons.
         del_w = [act[i].T.dot(delta[i]) for i in range(self.num_layers-1)]
         
-        if np.invert(np.isfinite(del_w[0])).any():
-            print("asd")
-             
         # All bias derivatves added up.
         delta = [np.sum(delta[i], axis=0) for i in range(self.num_layers-1)]
 
@@ -149,3 +117,28 @@ class Network:
 
 
  
+
+def softmax(x):
+    tmp = np.exp(x)
+    return (tmp.T/np.sum(tmp, axis=1)).T
+
+def softmax_prime(x):
+    out = np.zeros_like(x, dtype = float)
+    denom = np.sum(np.exp(x), axis=1)**2
+    saved_mask = np.ones_like(x, dtype = float)
+
+    # Have to calculate explicitly for each neuron because the result is dependent on 
+    # not only the neuron being derivated but also the neuron's (in the layer) that are 
+    # being regarded as a constant, resulting in the formula changing for each one.
+    # Transpose to change shape (sample,neuron) -> (neuron,sample) and allow easy enumeration.
+    for i, arr in enumerate(x.T):
+        mask = np.copy(saved_mask)
+        mask[:,i] = 0
+
+        num = np.exp(arr)*np.sum(np.multiply(np.exp(x), mask), axis=1)
+        
+        if np.invert(np.isfinite(num)).any() or np.invert(np.isfinite(denom)).any():
+            print("asd")
+        out[:,i] = num/denom 
+         
+    return out
