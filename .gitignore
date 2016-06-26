@@ -243,3 +243,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/MNIST_Recognition/data/data_test.hdf5
+/MNIST_Recognition/data/data_train.hdf5
