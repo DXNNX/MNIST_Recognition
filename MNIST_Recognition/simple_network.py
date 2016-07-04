@@ -21,8 +21,6 @@ def elu_prime(x):
     return d_elu
 
 
-
-
 class Network:
 
     def __init__(self, shape):
@@ -40,8 +38,8 @@ class Network:
     def output(self,a):
         for b,w in zip(self.biases[:-1],self.weights[:-1]):
             a=self.act_fct(a.dot(w) + b)
-        #a=softmax(a.dot(self.weights[-1]) + self.biases[-1])
-        a=self.act_fct(a.dot(self.weights[-1]) + self.biases[-1])
+        a=softmax(a.dot(self.weights[-1]) + self.biases[-1])
+        #a=self.act_fct(a.dot(self.weights[-1]) + self.biases[-1])
         return a
 
 
@@ -58,10 +56,10 @@ class Network:
                 self.update_batch(batch_f, batch_t, eta, ct)
 
             if val_data:
-                print("Epoch {0}:{1}".format(
+                print("Epoch {0}: {1}".format(
                     i,self.evaluate(f_test, t_test)))
             else:
-                print("Epoch {0}:{1}".format(
+                print("Epoch {0}: {1}".format(
                     i,self.evaluate(feats, targs)))
                 print(self.cross_ent(feats, targs))
     
@@ -89,12 +87,11 @@ class Network:
             z[i] = act[i].dot(self.weights[i]) + self.biases[i]
             act[i+1] = self.act_fct(z[i])
         z[-1] = act[-2].dot(self.weights[-1]) +self.biases[-1]
-        act[-1] = self.act_fct(z[-1])
-        #act[-1] = softmax(z[-1])
+        act[-1] = softmax(z[-1])
         
         # Backward.
         delta = [np.zeros((len_batch, size)) for size in self.shape[1:]]
-        delta[-1] = -(np.divide(y, act[-1])) * elu_prime(z[-1])
+        delta[-1] = act[-1]-y
 
         for l in range(2,self.num_layers):
             delta[-l] = delta[-(l-1)].dot(self.weights[-(l-1)].T)*elu_prime(z[-l])
@@ -122,23 +119,23 @@ def softmax(x):
     tmp = np.exp(x)
     return (tmp.T/np.sum(tmp, axis=1)).T
 
-def softmax_prime(x):
-    out = np.zeros_like(x, dtype = float)
-    denom = np.sum(np.exp(x), axis=1)**2
-    saved_mask = np.ones_like(x, dtype = float)
+#def softmax_prime(x):
+#    out = np.zeros_like(x, dtype = float)
+#    denom = np.sum(np.exp(x), axis=1)**2
+#    saved_mask = np.ones_like(x, dtype = float)
 
-    # Have to calculate explicitly for each neuron because the result is dependent on 
-    # not only the neuron being derivated but also the neuron's (in the layer) that are 
-    # being regarded as a constant, resulting in the formula changing for each one.
-    # Transpose to change shape (sample,neuron) -> (neuron,sample) and allow easy enumeration.
-    for i, arr in enumerate(x.T):
-        mask = np.copy(saved_mask)
-        mask[:,i] = 0
+#    # Have to calculate explicitly for each neuron because the result is dependent on 
+#    # not only the neuron being derivated but also the neuron's (in the layer) that are 
+#    # being regarded as a constant, resulting in the formula changing for each one.
+#    # Transpose to change shape (sample,neuron) -> (neuron,sample) and allow easy enumeration.
+#    for i, arr in enumerate(x.T):
+#        mask = np.copy(saved_mask)
+#        mask[:,i] = 0
 
-        num = np.exp(arr)*np.sum(np.multiply(np.exp(x), mask), axis=1)
+#        num = np.exp(arr)*np.sum(np.multiply(np.exp(x), mask), axis=1)
         
-        if np.invert(np.isfinite(num)).any() or np.invert(np.isfinite(denom)).any():
-            print("asd")
-        out[:,i] = num/denom 
+#        if np.invert(np.isfinite(num)).any() or np.invert(np.isfinite(denom)).any():
+#            print("asd")
+#        out[:,i] = num/denom 
          
-    return out
+#    return out

@@ -15,10 +15,10 @@ def main():
 
     feats, targs, f_test, t_test = get_data()
     print(feats.shape, f_test.shape)
-    f,t = feats[:10], targs[:10]
+    f,t = feats, targs
     NN = Network([784,30,30,10])
 
-    NN.train(f, t, 100, 100, 1e-2) 
+    NN.train(f, t, 10, 200, 1e-1) 
 
     print(NN.evaluate(f,t))
 
