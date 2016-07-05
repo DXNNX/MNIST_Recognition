@@ -110,7 +110,7 @@ class Network:
         return np.mean(test_results)
 
     def cross_ent(self, f, t):
-        return np.mean(-np.multiply(t,np.log(self.output(f))))
+        return np.mean(np.sum(-np.multiply(t,np.log(self.output(f))), axis=1))
 
 
  
